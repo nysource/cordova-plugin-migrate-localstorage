@@ -16,7 +16,7 @@ In your `config.xml`, add a scheme (the new file name will depends on this schem
 
 Simply add the plugin to your cordova project via the cli:
 ```sh
-cordova plugin add https://github.com/viglino/cordova-plugin-migrate-localstorage
+cordova plugin add https://github.com/nysource/cordova-plugin-migrate-localstorage
 ```
 
 ## Notes
