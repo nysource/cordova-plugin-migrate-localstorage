@@ -8,8 +8,8 @@
 
 #define TAG @"\nMigrateLS"
 
-#define ORIG_FOLDER @"WebKit/LocalStorage"
-#define ORIG_LS_FILEPATH @"WebKit/LocalStorage/file__0.localstorage"
+#define ORIG_FOLDER @"WebKit/WebsiteData/LocalStorage"
+#define ORIG_LS_FILEPATH @"WebKit/WebsiteData/LocalStorage/file__0.localstorage"
 #define ORIG_LS_CACHE @"Caches/file__0.localstorage"
 // #define TARGET_LS_FILEPATH @"WebsiteData/LocalStorage/file__0.localstorage" // original cordova file
 //#define TARGET_LS_FILEPATH @"WebKit/WebsiteData/LocalStorage/http_localhost_8080.localstorage"
