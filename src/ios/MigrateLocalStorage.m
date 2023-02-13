@@ -8,11 +8,11 @@
 
 #define TAG @"\nMigrateLS"
 
-#define ORIG_FOLDER @"WebKit/WebsiteData/LocalStorage"
-#define ORIG_LS_FILEPATH @"WebKit/WebsiteData/LocalStorage/file__0.localstorage"
+#define ORIG_LS_FILEPATH @"WebKit/LocalStorage/file__0.localstorage"
+#define ORIG_WK_LS_FILEPATH @"WebKit/WebsiteData/LocalStorage/file__0.localstorage"
+#define ORIG_WK16_LS_FILEPATH @"WebKit/WebsiteData/Default"
+#define ORIG_WK16_LS_FILENAME @"localstorage.sqlite3"
 #define ORIG_LS_CACHE @"Caches/file__0.localstorage"
-// #define TARGET_LS_FILEPATH @"WebsiteData/LocalStorage/file__0.localstorage" // original cordova file
-//#define TARGET_LS_FILEPATH @"WebKit/WebsiteData/LocalStorage/http_localhost_8080.localstorage"
 #define TARGET_LS_FILEPATH @"WebKit/WebsiteData/LocalStorage/app_localhost_0.localstorage"
 #define ORIG_IDB_FILEPATH @"WebKit/LocalStorage/___IndexedDB/file__0"
 #define TARGET_IDB_FILEPATH @"WebKit/WebsiteData/IndexedDB/http_localhost_8080"
@@ -72,21 +72,54 @@
 
 /** LS Functions **/
 
+-(NSString*)getFilePathInDirectory:(NSString*)path fileName:(NSString*)fileName
+{
+    NSDirectoryEnumerator* dirEnum = [[NSFileManager defaultManager] enumeratorAtPath:path];
+    NSString* name;
+    NSString* filePath = @"";
+    while(name = [dirEnum nextObject]) {
+        if([fileName isEqualToString:[name lastPathComponent]]) {
+            filePath = [path stringByAppendingPathComponent:name];
+            break;
+        }
+    }
+    return filePath;
+}
+
 /**
 * Gets filepath of localStorage file we want to migrate from
 */
 - (NSString*) resolveOriginalLSFile
 {
     NSString* appLibraryFolder = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString* original;
+    NSString* original = @"";
 
     NSString* originalLSFilePath = [appLibraryFolder stringByAppendingPathComponent:ORIG_LS_FILEPATH];
-
+    
     if ([[NSFileManager defaultManager] fileExistsAtPath:originalLSFilePath]) {
         original = originalLSFilePath;
     } else {
-        original = [appLibraryFolder stringByAppendingPathComponent:ORIG_LS_CACHE];
+        originalLSFilePath = [appLibraryFolder stringByAppendingPathComponent:ORIG_WK_LS_FILEPATH];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:originalLSFilePath]) {
+            original = originalLSFilePath;
+        }
+        else {
+            int i;
+            NSFileManager *filemanager = [NSFileManager defaultManager];
+            NSString* target = [appLibraryFolder stringByAppendingPathComponent:ORIG_WK16_LS_FILEPATH];
+            NSArray *files = [filemanager contentsOfDirectoryAtPath:target error:nil];
+            for(i = 0;i < [files count];i++){
+                original = [self getFilePathInDirectory:[target stringByAppendingPathComponent:[files objectAtIndex:i]] fileName:ORIG_WK16_LS_FILENAME];
+                if(![original isEqualToString:@""]) {
+                    break;
+                }
+            }
+            if([original isEqualToString:@""]) {
+                original = [appLibraryFolder stringByAppendingPathComponent:ORIG_LS_CACHE];
+            }
+        }
     }
+    // NSLog(original, TAG);
     return original;
 }
 
@@ -214,15 +247,8 @@
 
 - (void)pluginInitialize
 {
-    BOOL lsResult = [self migrateLocalStorage];
-    BOOL idbResult = [self migrateIndexedDB];
-    if (lsResult && idbResult) {
-        // if all successfully migrated, do some cleanup!
-        NSString* appLibraryFolder = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-        NSString* originalFolder = [appLibraryFolder stringByAppendingPathComponent:ORIG_FOLDER];
-        BOOL res = [self deleteFile:originalFolder];
-        // NSLog(@"%@ final deletion res %d", TAG, res);
-    }
+    [self migrateLocalStorage];
+    [self migrateIndexedDB];
 }
 
 @end
